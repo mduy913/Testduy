@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+
+<title>SHOP CAO MINH DUY V80</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+
+:root{--bg:#0b0b12;--cyan:#00f2ff;--gold:#ffcc00;--card:#1a1a2e;--red:#ff4444;--vip:#ff00ff}body{background:var(--bg);color:#fff;font-family:sans-serif;padding:10px;margin:0}.box{background:var(--card);padding:15px;border-radius:12px;border:1px solid #2a2a40;margin-bottom:15px;position:relative}input,textarea{width:100%;padding:12px;margin:5px 0;border-radius:8px;border:1px solid #333;background:#000;color:#fff;box-sizing:border-box;outline:0}button{border:none;padding:12px;border-radius:8px;font-weight:800;cursor:pointer;width:100%;transition:.2s;text-transform:uppercase}button:active{transform:scale(.95)}.btn-main{background:var(--cyan);color:#000}.btn-gold{background:var(--gold);color:#000}.btn-red{background:var(--red);color:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.adm-sec{border:2px solid var(--red);padding:10px;border-radius:12px;margin-bottom:15px;display:none}#qr-display{text-align:center;margin-top:15px;display:none;background:#fff;padding:15px;border-radius:15px;border:3px solid var(--cyan);animation:fade .5s}@keyframes fade{from{opacity:0}to{opacity:1}}#qr-display img{width:220px;height:220px;border-radius:5px;margin-bottom:10px;border:1px solid #eee}#qr-display p{color:#000;margin:2px 0;font-size:13px}table{width:100%;font-size:11px;border-collapse:collapse;margin-top:5px}td,th{padding:8px 4px;border-bottom:1px solid #222;text-align:left}.tag-vip{color:var(--vip);font-weight:700;text-shadow:0 0 5px var(--vip)}.price-tag{display:block;font-size:10px;opacity:.8;margin-top:2px}.scroll-list{max-height:150px;overflow-y:auto;margin-top:10px;background:rgba(0,0,0,.2);padding:5px;border-radius:5px}.del-btn{background:#444;color:#fff;padding:4px 6px;font-size:9px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center}.adm-btn-group{display:flex;gap:5px;margin-top:5px}.btn-small{padding:4px 10px;font-size:10px;width:auto}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="auth-ui" style="max-width:400px;margin:50px auto;padding:10px">
+
+<div class="box">
+
+<h3 style="text-align:center;color:var(--cyan);margin:0 0 15px 0">HỆ THỐNG SHOP V80</h3>
+
+<input type="text" id="au" placeholder="Tài khoản">
+
+<input type="password" id="ap" placeholder="Mật khẩu">
+
+<div class="grid"><button class="btn-main" onclick="auth('login')">ĐĂNG NHẬP</button><button style="background:#444;color:#fff" onclick="auth('reg')">ĐĂNG KÝ</button></div>
+
+</div>
+
+</div>
+
+<div id="shop-ui" style="display:none;max-width:500px;margin:auto;padding:10px">
+
+<div id="adm-box" class="adm-sec">
+
+<h4 style="color:var(--red);text-align:center;margin:0 0 10px 0">QUẢN TRỊ SHOP</h4>
+
+<div class="grid" style="grid-template-columns:repeat(4,1fr)"><input type="number" id="adm-p-ngay" placeholder="Giá N"><input type="number" id="adm-p-tuan" placeholder="Giá T"><input type="number" id="adm-p-thang" placeholder="Giá Th"><input type="number" id="adm-p-nam" placeholder="Giá Nam"></div>
+
+<div class="grid" style="grid-template-columns:repeat(4,1fr)"><input type="number" id="adm-v-ngay" placeholder="Vip N"><input type="number" id="adm-v-tuan" placeholder="Vip T"><input type="number" id="adm-v-thang" placeholder="Vip Th"><input type="number" id="adm-v-nam" placeholder="Vip Nam"></div>
+
+<div class="grid"><input type="number" id="adm-p-roll" placeholder="Giá Quay"><input type="number" id="adm-v-roll" placeholder="Quay VIP"><input type="number" id="adm-rate" placeholder="% Trúng"></div>
+
+<button class="btn-main" onclick="saveSettings()">LƯU THÔNG SỐ</button>
+
+<textarea id="add-k" placeholder="Dán key..." style="margin-top:10px;height:50px"></textarea>
+
+<div class="grid" style="grid-template-columns:repeat(4,1fr)"><button class="btn-main" onclick="upK('ngay')">+N</button><button class="btn-main" onclick="upK('tuan')">+T</button><button class="btn-main" onclick="upK('thang')">+Th</button><button class="btn-main" onclick="upK('nam')">+Nam</button></div>
+
+<h5>DUYỆT NẠP:</h5><div id="adm-pay-list" class="scroll-list"></div>
+
+<h5 style="color:var(--cyan)">DUYỆT RESET KEY:</h5><div id="adm-rs-list" class="scroll-list"></div>
+
+<h5>DANH SÁCH USER:</h5><div class="scroll-list"><table id="adm-user-list"></table></div>
+
+</div>
+
+<div class="box">
+
+<p>Sếp: <b id="u-id" style="color:var(--cyan)"></b> <span id="u-rank" class="tag-vip"></span> | Ví: <b id="u-bl" style="color:var(--gold)">0</b>đ</p>
+
+<input type="number" id="n-amt" placeholder="Số tiền nạp...">
+
+<button class="btn-gold" onclick="nap()">NẠP TIỀN QUA QR</button>
+
+<div id="qr-display">
+
+<img id="qr-img" src="">
+
+<p style="font-weight:700">MB BANK: 0588807300000</p>
+
+<p>Chủ TK: <b>CAO MINH DUY</b></p>
+
+<p style="color:blue!important;font-weight:700">ND: <span id="txt-nd"></span></p>
+
+<div class="grid" style="margin-top:10px"><button class="btn-main" onclick="confirmNap()">XÁC NHẬN</button><button style="background:#444;color:#fff" onclick="document.getElementById('qr-display').style.display='none'">HỦY</button></div>
+
+</div>
+
+</div>
+
+<div class="box" style="text-align:center">
+
+<h4 style="color:var(--gold);margin:0">🎲 VÒNG QUAY MAY MẮN</h4>
+
+<p style="font-size:11px">Giá: <b id="view-p-roll">0</b>đ/lượt</p>
+
+<div class="grid"><button class="btn-gold" onclick="roll('tuan')">QUAY TUẦN</button><button class="btn-gold" onclick="roll('thang')">QUAY THÁNG</button><button class="btn-gold" onclick="roll('nam')">QUAY NĂM</button></div>
+
+<p id="roll-res" style="font-size:13px;font-weight:700;margin-top:10px;min-height:18px"></p>
+
+</div>
+
+<div class="box">
+
+<h4 style="color:var(--cyan);margin:0 0 10px 0;text-align:center">🛒 CỬA HÀNG KEY</h4>
+
+<div class="grid">
+
+<button class="btn-main" onclick="buy('ngay')">NGÀY (<span id="s-ngay">0</span>) <span class="price-tag" id="pr-ngay">0đ</span></button>
+
+<button class="btn-main" onclick="buy('tuan')">TUẦN (<span id="s-tuan">0</span>) <span class="price-tag" id="pr-tuan">0đ</span></button>
+
+<button class="btn-main" onclick="buy('thang')">THÁNG (<span id="s-thang">0</span>) <span class="price-tag" id="pr-thang">0đ</span></button>
+
+<button class="btn-main" onclick="buy('nam')">NĂM (<span id="s-nam">0</span>) <span class="price-tag" id="pr-nam">0đ</span></button>
+
+</div>
+
+</div>
+
+<div class="box">
+
+<h4 style="color:var(--red);margin:0 0 10px 0;text-align:center">🔄 RESET KEY</h4>
+
+<input type="text" id="rs-key-input" placeholder="Nhập Key cần Reset...">
+
+<button class="btn-red" onclick="requestRS()">GỬI YÊU CẦU RESET</button>
+
+</div>
+
+<div class="box"><h4>📜 LỊCH SỬ</h4><table><tbody id="h-list"></tbody></table></div>
+
+</div>
+
+<script>
+
+(function(){var a=navigator.userAgent.toLowerCase();if(!/iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(a)||window.innerWidth>1024){document.body.innerHTML="<div style='color:red;text-align:center;margin-top:100px;font-weight:bold;font-size:20px;'>WEB CHỈ HỖ TRỢ TRÊN THIẾT BỊ DI ĐỘNG!</div>";alert("PC KHÔNG ĐƯỢC PHÉP TRUY CẬP!");window.location.href="about:blank";window.close()}})();
+
+const firebaseConfig={databaseURL:"https://shopmduy-default-rtdb.asia-southeast1.firebasedatabase.app"};firebase.initializeApp(firebaseConfig);const db=firebase.database();let curU,curUID,isVIP=!1,settings={rate:10};function auth(a){const b=document.getElementById('au').value.trim().toLowerCase(),c=document.getElementById('ap').value;if(!b||!c)return Swal.fire('Lỗi','Điền đủ info!','error');if('reg'===a)db.ref('users/'+b).set({password:c,balance:0,role:'user',isVIP:!1,uid:"U"+Date.now()}).then(()=>Swal.fire('Thành công','Đăng ký xong!','success'));else db.ref('users/'+b).once('value',a=>{const d=a.val();if(d&&d.password===c){curU=b;curUID=d.uid;document.getElementById('auth-ui').style.display='none';document.getElementById('shop-ui').style.display='block';document.getElementById('u-id').innerText=b;if('admin'===d.role)document.getElementById('adm-box').style.display='block';db.ref('users/'+b+'/isVIP').on('value',a=>{isVIP=a.val()||!1;document.getElementById('u-rank').innerText=isVIP?"[VIP]":"";updatePrice()});db.ref('users/'+b+'/balance').on('value',a=>document.getElementById('u-bl').innerText=(a.val()||0).toLocaleString());init()}else Swal.fire('Lỗi','Sai tài khoản!','error')})}function nap(){const a=Number(document.getElementById('n-amt').value);if(a<1000)return Swal.fire('Thông báo','Nạp tối thiểu 1.000đ!','warning');const b=`NAP ${curU.toUpperCase()}`,c=`https://img.vietqr.io/image/mbbank-0588807300000-compact2.png?amount=${a}&addInfo=${encodeURIComponent(b)}&accountName=CAO%20MINH%20DUY`;document.getElementById('qr-img').src=c;document.getElementById('txt-nd').innerText=b;document.getElementById('qr-display').style.display='block';db.ref('bank_requests').push({user:curU,amount:a,time:new Date().toLocaleString()})}function confirmNap(){document.getElementById('qr-display').style.display='none';Swal.fire({icon:'success',title:'Đã gửi yêu cầu!',showConfirmButton:!1,timer:1500})}function requestRS(){const a=document.getElementById('rs-key-input').value.trim();if(!a)return Swal.fire('Lỗi','Vui lòng nhập key!','error');db.ref('purchased_keys/'+curUID).once('value',b=>{let c=!1;b.forEach(b=>{b.val().key===a&&(c=!0)});if(!c)return Swal.fire('Lỗi','Key không thuộc sở hữu của bạn!','error');db.ref('reset_requests').push({user:curU,uid:curUID,key:a,time:new Date().toLocaleString(),status:'Đang xử lý'}).then(()=>{addHistory("RS KEY","ĐANG ĐỢI: "+a);Swal.fire({icon:'success',title:'Đã gửi yêu cầu!',showConfirmButton:!1,timer:1500});document.getElementById('rs-key-input').value=""})})}function addHistory(a,b){db.ref('history_pay/'+curUID).push({time:new Date().toLocaleString(),amount:a,status:b})}function saveKeyForRS(a){db.ref('purchased_keys/'+curUID).push({key:a,time:new Date().toLocaleString()})}window.delHis=function(a){db.ref('history_pay/'+curUID+'/'+a).remove()};window.handleRS=function(a,b,c,d){db.ref('reset_requests/'+a).remove();db.ref('history_pay/'+b).push({time:new Date().toLocaleString(),amount:"KẾT QUẢ RS",status:d+": "+c});Swal.fire('Thông báo','Xử lý xong!','info')};function roll(a){const b=isVIP?settings.v_roll:settings.p_roll,c=document.getElementById('roll-res');db.ref('users/'+curU+'/balance').once('value',d=>{let e=d.val()||0;if(e<b)return Swal.fire('Lỗi','Hết tiền!','error');db.ref('users/'+curU+'/balance').set(e-b);c.innerText="🎲 Đang quay...";setTimeout(()=>{if(Math.floor(100*Math.random())<settings.rate)db.ref('key_store/'+a).limitToFirst(1).once('value',b=>{if(!b.exists())c.innerHTML=`<span style="color:var(--red)">HỤT RỒI!</span>`,addHistory("QUAY "+a.toUpperCase(),"HỤT");else{let d=Object.keys(b.val())[0],e=b.val()[d];db.ref('key_store/'+a+'/'+d).remove();addHistory("TRÚNG "+a.toUpperCase(),e);saveKeyForRS(e);c.innerHTML=`<span style="color:var(--cyan)">🔥 KEY: ${e}</span>`;Swal.fire('Chúc mừng','Bạn đã trúng Key!','success')}});else c.innerHTML=`<span style="color:var(--red)">CHÚC MAY MẮN!</span>`,addHistory("QUAY "+a.toUpperCase(),"HỤT")},800)})}function buy(a){const b=isVIP?settings['v_'+a]:settings['p_'+a];db.ref('users/'+curU+'/balance').once('value',c=>{let d=c.val()||0;if(d<b)return Swal.fire('Lỗi','Hết tiền!','error');db.ref('key_store/'+a).limitToFirst(1).once('value',c=>{if(!c.exists())return Swal.fire('Lỗi','Hết hàng!','error');db.ref('users/'+curU+'/balance').set(d-b);let e=Object.keys(c.val())[0],f=c.val()[e];db.ref('key_store/'+a+'/'+e).remove();addHistory("MUA "+a.toUpperCase(),f);saveKeyForRS(f);Swal.fire('Thành công','KEY: '+f,'success')})})}function saveSettings(){const a={rate:Number(document.getElementById('adm-rate').value),p_roll:Number(document.getElementById('adm-p-roll').value),p_ngay:Number(document.getElementById('adm-p-ngay').value),p_tuan:Number(document.getElementById('adm-p-tuan').value),p_thang:Number(document.getElementById('adm-p-thang').value),p_nam:Number(document.getElementById('adm-p-nam').value),v_roll:Number(document.getElementById('adm-v-roll').value),v_ngay:Number(document.getElementById('adm-v-ngay').value),v_tuan:Number(document.getElementById('adm-v-tuan').value),v_thang:Number(document.getElementById('adm-v-thang').value),v_nam:Number(document.getElementById('adm-v-nam').value)};db.ref('system/settings').set(a).then(()=>Swal.fire('Xong','Lưu xong!','success'))}function updatePrice(){const a=isVIP?'v_':'p_';document.getElementById('view-p-roll').innerText=(settings[a+'roll']||0).toLocaleString();['ngay','tuan','thang','nam'].forEach(b=>{const c=settings[a+b]||0;document.getElementById('pr-'+b).innerText=c.toLocaleString()+"đ"})}function upK(a){const b=document.getElementById('add-k').value.trim().split('\n').filter(a=>""!==a.trim());b.forEach(b=>db.ref('key_store/'+a).push(b.trim()));Swal.fire('Xong','Đã thêm!','success');document.getElementById('add-k').value=""}function init(){db.ref('system/settings').on('value',a=>{if(a.exists()){settings=a.val();updatePrice();if(document.getElementById('adm-rate')){document.getElementById('adm-rate').value=settings.rate;['p_roll','p_ngay','p_tuan','p_thang','p_nam','v_roll','v_ngay','v_tuan','v_thang','v_nam'].forEach(a=>{const b=document.getElementById('adm-'+a.replace('_','-'));b&&(b.value=settings[a]||0)})}}});['ngay','tuan','thang','nam'].forEach(a=>db.ref('key_store/'+a).on('value',b=>document.getElementById('s-'+a).innerText=b.numChildren()));db.ref('history_pay/'+curUID).on('value',a=>{const b=document.getElementById('h-list');b.innerHTML="";a.forEach(a=>{const c=a.val();const hasK=c.amount.includes("MUA")||c.amount.includes("TRÚNG");b.innerHTML=`<tr><td>${c.time}</td><td>${c.amount}</td><td style="color:var(--cyan)">${c.status}</td><td style="display:flex;gap:4px">${hasK?`<button class="del-btn" style="background:var(--cyan);color:#000" onclick="location.href='https://mduy913.github.io/Mduyfakelong/'">⚙️</button>`:''}<button class="del-btn" onclick="delHis('${a.key}')">X</button></td></tr>`+b.innerHTML})});db.ref('bank_requests').on('value',a=>{const b=document.getElementById('adm-pay-list');b.innerHTML="";a.forEach(a=>{const c=a.val();b.innerHTML+=`<div style="font-size:11px;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:5px">${c.user}: ${c.amount}đ <div class="adm-btn-group"><button class="btn-main btn-small" onclick="db.ref('users/${c.user}/balance').transaction(v=>(v||0)+${c.amount});db.ref('bank_requests/${a.key}').remove()">DUYỆT</button> <button class="btn-red btn-small" onclick="db.ref('bank_requests/${a.key}').remove()">XÓA BỎ</button></div></div>`})});db.ref('users').on('value',a=>{const b=document.getElementById('adm-user-list');b.innerHTML="<tr><th>User</th><th>Ví</th><th>VIP</th><th>Xóa</th></tr>";a.forEach(a=>{const c=a.val();b.innerHTML+=`<tr><td>${a.key}</td><td>${(c.balance||0).toLocaleString()}</td><td><button onclick="db.ref('users/${a.key}/isVIP').set(${!c.isVIP})" style="background:${c.isVIP?'var(--vip)':'#444'};padding:2px">${c.isVIP?'Hủy':'Lên'}</button></td><td><button onclick="db.ref('users/${a.key}').remove()" style="background:var(--red);padding:2px">X</button></td></tr>`})});db.ref('reset_requests').on('value',a=>{const b=document.getElementById('adm-rs-list');b.innerHTML="";a.forEach(a=>{const c=a.val();b.innerHTML+=`<div style="font-size:11px;border-bottom:1px solid #333;padding:5px;">${c.user}: ${c.key} <br><div class="adm-btn-group"><button style="background:var(--cyan);color:#000" class="btn-small" onclick="handleRS('${a.key}','${c.uid}','${c.key}','THÀNH CÔNG')">XONG</button><button style="background:var(--red)" class="btn-small" onclick="handleRS('${a.key}','${c.uid}','${c.key}','HỦY BỎ')">HỦY BỎ</button></div></div>`})})}
+
+</script>
+
+</body>
+
+</html>
