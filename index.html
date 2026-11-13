@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Game Optimizer & DNS Builder</title>
+<title>Game Optimizer Tool</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
@@ -17,6 +17,16 @@ h1 { text-align: center; font-size: 22px; margin-bottom: 6px; background: linear
 .subtitle { text-align: center; font-size: 12px; color: #888; margin-bottom: 18px; line-height: 1.5; }
 .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(168,85,247,0.3); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
 .label { font-size: 11px; font-weight: 800; color: #a855f7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+.os-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.os-btn {
+    padding: 12px; background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(168,85,247,0.3); border-radius: 10px;
+    color: #ccc; font-weight: 700; font-size: 14px; cursor: pointer;
+    text-align: center; transition: 0.2s;
+}
+.os-btn.active { background: linear-gradient(135deg, #a855f7, #ec4899); border-color: transparent; color: #fff; }
+
 .option-row { display: flex; flex-direction: column; gap: 8px; }
 .option-btn {
     padding: 14px 16px; background: rgba(0,0,0,0.3);
@@ -53,16 +63,23 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
 <body>
 
 <div class="container">
-    <h1>GAME OPTIMIZER & DNS</h1>
-    <div class="subtitle">Chọn triệu chứng → Nhận checklist tối ưu + File DNS</div>
+    <h1>GAME OPTIMIZER</h1>
+    <div class="subtitle">Chọn thiết bị và triệu chứng để nhận hướng dẫn tối ưu</div>
 
     <div class="hint">
-        <b>Sự thật:</b> Không có file cấu hình nào sửa được rung tâm. Nhưng tối ưu máy, mạng và cài đặt trong game thì có tác dụng thật.
+        <b>Sự thật:</b> Không có file cấu hình nào sửa được rung tâm. Tối ưu máy, mạng và cài đặt trong game mới có tác dụng thật.
     </div>
 
-    <!-- CHỌN VẤN ĐỀ -->
     <div class="card">
-        <div class="label">BẠN ĐANG GẶP VẤN ĐỀ GÌ?</div>
+        <div class="label">1. CHỌN HỆ ĐIỀU HÀNH</div>
+        <div class="os-row">
+            <button class="os-btn active" data-os="ios" id="os-ios">iOS (iPhone)</button>
+            <button class="os-btn" data-os="android" id="os-android">Android</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="label">2. CHỌN VẤN ĐỀ BẠN GẶP</div>
         <div class="option-row" id="issue-list">
             <button class="option-btn" data-issue="heavy">
                 <div class="check"></div>
@@ -95,19 +112,17 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
         </div>
     </div>
 
-    <!-- CHECKLIST TỐI ƯU -->
     <div class="card tips-box" id="tips-box">
-        <div class="label">CHECKLIST TỐI ƯU (Thực sự có tác dụng)</div>
+        <div class="label">CHECKLIST TỐI ƯU</div>
         <div id="tips-content"></div>
     </div>
 
-    <!-- TẠO DNS -->
-    <div class="card">
-        <div class="label">FILE CẤU HÌNH DNS (Tùy chọn)</div>
+    <div class="card" id="dns-card" style="display:none;">
+        <div class="label">FILE CẤU HÌNH DNS (Tùy chọn cho iOS)</div>
         <p style="font-size: 11px; color: #888; margin-bottom: 8px; line-height: 1.5;">
-            File này chỉ đổi DNS hệ thống. Nó <b>không sửa rung tâm</b>, nhưng có thể giúp phân giải tên miền nhanh hơn, đôi khi cải thiện độ ổn định mạng.
+            File này chỉ đổi DNS hệ thống. Nó không sửa rung tâm, nhưng có thể giúp phân giải tên miền nhanh hơn.
         </p>
-        <label class="switch-row" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; cursor: pointer;">
+        <label style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; cursor: pointer;">
             <span style="font-size: 12px; font-weight: 600;">Tạo kèm file DNS tối ưu</span>
             <input type="checkbox" id="opt-dns" style="transform: scale(1.5); margin-right: 5px;">
         </label>
@@ -130,36 +145,86 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
     var configFile = null;
     var configBlobUrl = null;
     var selectedIssue = null;
+    var selectedOS = 'ios';
 
-    // Dữ liệu Checklist
+    document.querySelectorAll('.os-btn').forEach(function(btn) {
+        btn.onclick = function() {
+            document.querySelectorAll('.os-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            selectedOS = btn.getAttribute('data-os');
+            
+            if (selectedOS === 'android') {
+                $('dns-card').style.display = 'none';
+                $('download-row').style.display = 'none';
+            } else {
+                if (selectedIssue) $('dns-card').style.display = 'block';
+            }
+            if (selectedIssue) {
+                renderTips(selectedIssue, selectedOS);
+            }
+        };
+    });
+
     var TIPS = {
-        heavy: [
-            { type: 'safe', text: '<b>Máy (iOS):</b> Bật "Giảm chuyển động" và "Giảm độ trong suốt" trong Cài đặt > Trợ năng. Tắt "Làm mới ứng dụng nền". Khởi động lại máy trước khi chơi.' },
-            { type: 'safe', text: '<b>Trong game:</b> Tăng nhẹ độ nhạy General và Red Dot lên 5-10 điểm (ví dụ General 185, Red Dot 195). Test lại trong Đảo Huấn Luyện.' },
-            { type: 'safe', text: '<b>Mạng:</b> Dùng app định tuyến như LagX để giảm lag spikes (nguyên nhân khiến aim bị "khựng").' },
-            { type: 'warn', text: '<b>Lưu ý:</b> Tâm "nặng" thường do độ nhạy quá thấp hoặc máy xử lý chậm. Không có file cấu hình nào sửa được điều này.' }
-        ],
-        shake: [
-            { type: 'safe', text: '<b>Máy (iOS):</b> Đảm bảo máy không nóng (tháo ốp, không vừa sạc vừa chơi). Hạ đồ họa game xuống Smooth/Standard để giảm tải GPU.' },
-            { type: 'safe', text: '<b>Trong game:</b> Nếu tâm văng quá đầu, giảm nhẹ Red Dot và 4x Scope xuống 3-5 điểm. Giữ ngón tay khô hoặc dùng găng tay gaming.' },
-            { type: 'safe', text: '<b>Mạng:</b> Lag spikes và packet loss tạo cảm giác "rung" dù máy khỏe. Dùng LagX để ổn định kết nối.' },
-            { type: 'warn', text: '<b>Lưu ý:</b> Tâm rung do nhiều yếu tố (máy nóng, mạng lag, tay ướt, độ nhạy sai). Không có file cấu hình nào sửa được rung tâm.' }
-        ],
-        lag: [
-            { type: 'safe', text: '<b>Mạng:</b> Dùng ứng dụng định tuyến game traffic như LagX. Nó chuyển hướng riêng lưu lượng game qua server tối ưu, giảm ping hiệu quả.' },
-            { type: 'safe', text: '<b>Wi-Fi:</b> Chuyển sang mạng 5GHz nếu có. Tránh xa router. Tắt các thiết bị khác đang tải nặng.' },
-            { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa, tắt hiệu ứng. Đảm bảo máy không nóng khi chơi.' },
-            { type: 'warn', text: '<b>Lưu ý:</b> Ping phụ thuộc vào tuyến đường đến server game, không phải DNS. File cấu hình DNS chỉ giúp phân giải tên miền nhanh hơn, không giảm ping trực tiếp.' }
-        ],
-        heat: [
-            { type: 'safe', text: '<b>Máy (iOS):</b> Tháo ốp lưng. Không vừa sạc vừa chơi. Tắt "Làm mới ứng dụng nền". Khởi động lại máy trước khi chơi.' },
-            { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa xuống Smooth/Standard. Tắt các hiệu ứng như bóng đổ, phản chiếu. Bật High FPS nếu máy hỗ trợ.' },
-            { type: 'safe', text: '<b>Môi trường:</b> Chơi ở nơi thoáng mát. Không để máy dưới ánh nắng trực tiếp. Dùng quạt tản nhiệt nếu cần.' },
-            { type: 'warn', text: '<b>Lưu ý:</b> Máy nóng là do phần cứng và tải game. Không có file cấu hình nào làm mát máy.' }
-        ]
+        ios: {
+            heavy: [
+                { type: 'safe', text: '<b>Máy (iOS):</b> Bật "Giảm chuyển động" và "Giảm độ trong suốt" trong Cài đặt > Trợ năng. Tắt "Làm mới ứng dụng nền". Khởi động lại máy trước khi chơi.' },
+                { type: 'safe', text: '<b>Trong game:</b> Tăng nhẹ độ nhạy General và Red Dot lên 5-10 điểm (ví dụ General 185, Red Dot 195). Test lại trong Đảo Huấn Luyện.' },
+                { type: 'safe', text: '<b>Mạng:</b> Dùng app định tuyến như LagX để giảm lag spikes (nguyên nhân khiến aim bị khựng).' }
+            ],
+            shake: [
+                { type: 'safe', text: '<b>Máy (iOS):</b> Đảm bảo máy không nóng (tháo ốp, không vừa sạc vừa chơi). Hạ đồ họa game xuống Smooth/Standard để giảm tải GPU.' },
+                { type: 'safe', text: '<b>Trong game:</b> Nếu tâm văng quá đầu, giảm nhẹ Red Dot và 4x Scope xuống 3-5 điểm. Giữ ngón tay khô hoặc dùng găng tay gaming.' },
+                { type: 'safe', text: '<b>Mạng:</b> Lag spikes và packet loss tạo cảm giác "rung" dù máy khỏe. Dùng LagX để ổn định kết nối.' }
+            ],
+            lag: [
+                { type: 'safe', text: '<b>Mạng:</b> Dùng ứng dụng định tuyến game traffic như LagX. Nó chuyển hướng riêng lưu lượng game qua server tối ưu, giảm ping hiệu quả.' },
+                { type: 'safe', text: '<b>Wi-Fi:</b> Chuyển sang mạng 5GHz nếu có. Tránh xa router. Tắt các thiết bị khác đang tải nặng.' },
+                { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa, tắt hiệu ứng. Đảm bảo máy không nóng khi chơi.' }
+            ],
+            heat: [
+                { type: 'safe', text: '<b>Máy (iOS):</b> Tháo ốp lưng. Không vừa sạc vừa chơi. Tắt "Làm mới ứng dụng nền". Khởi động lại máy trước khi chơi.' },
+                { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa xuống Smooth/Standard. Tắt các hiệu ứng như bóng đổ, phản chiếu. Bật High FPS nếu máy hỗ trợ.' },
+                { type: 'safe', text: '<b>Môi trường:</b> Chơi ở nơi thoáng mát. Không để máy dưới ánh nắng trực tiếp. Dùng quạt tản nhiệt nếu cần.' }
+            ]
+        },
+        android: {
+            heavy: [
+                { type: 'safe', text: '<b>Máy (Android):</b> Vào Cài đặt > Tùy chọn nhà phát triển, giảm "Tỷ lệ hoạt ảnh" xuống 0.5x. Tắt các ứng dụng chạy nền không cần thiết.' },
+                { type: 'safe', text: '<b>Trong game:</b> Tăng nhẹ độ nhạy General và Red Dot lên 5-10 điểm. Test lại trong Đảo Huấn Luyện.' },
+                { type: 'safe', text: '<b>Mạng:</b> Dùng app định tuyến như LagX hoặc GearUP Booster để giảm lag spikes.' }
+            ],
+            shake: [
+                { type: 'safe', text: '<b>Máy (Android):</b> Đảm bảo máy không nóng (tháo ốp, không vừa sạc vừa chơi). Hạ đồ họa game xuống Smooth/Standard. Tắt "Tăng tốc phần cứng" nếu máy yếu.' },
+                { type: 'safe', text: '<b>Trong game:</b> Nếu tâm văng quá đầu, giảm nhẹ Red Dot và 4x Scope xuống 3-5 điểm. Giữ ngón tay khô hoặc dùng găng tay gaming.' },
+                { type: 'safe', text: '<b>Mạng:</b> Lag spikes và packet loss tạo cảm giác "rung". Dùng LagX để ổn định kết nối.' }
+            ],
+            lag: [
+                { type: 'safe', text: '<b>Mạng:</b> Dùng ứng dụng định tuyến game traffic như LagX hoặc GearUP Booster. Chúng chuyển hướng riêng lưu lượng game qua server tối ưu.' },
+                { type: 'safe', text: '<b>Wi-Fi:</b> Chuyển sang mạng 5GHz nếu có. Tránh xa router. Tắt các thiết bị khác đang tải nặng.' },
+                { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa, tắt hiệu ứng. Đảm bảo máy không nóng khi chơi.' }
+            ],
+            heat: [
+                { type: 'safe', text: '<b>Máy (Android):</b> Tháo ốp lưng. Không vừa sạc vừa chơi. Tắt các ứng dụng chạy nền. Khởi động lại máy trước khi chơi.' },
+                { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa xuống Smooth/Standard. Tắt các hiệu ứng như bóng đổ, phản chiếu. Bật High FPS nếu máy hỗ trợ.' },
+                { type: 'safe', text: '<b>Môi trường:</b> Chơi ở nơi thoáng mát. Không để máy dưới ánh nắng trực tiếp. Dùng quạt tản nhiệt nếu cần.' }
+            ]
+        }
     };
 
-    // Chọn vấn đề
+    function renderTips(issue, os) {
+        var tipsBox = $('tips-box');
+        var tipsContent = $('tips-content');
+        tipsContent.innerHTML = '';
+        TIPS[os][issue].forEach(function(tip) {
+            var div = document.createElement('div');
+            div.className = 'tip-item ' + tip.type;
+            div.innerHTML = tip.text;
+            tipsContent.appendChild(div);
+        });
+        tipsBox.classList.add('show');
+    }
+
     document.querySelectorAll('.option-btn').forEach(function(btn) {
         btn.onclick = function() {
             document.querySelectorAll('.option-btn').forEach(function(b) {
@@ -170,19 +235,12 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
             btn.querySelector('.check').textContent = '✓';
             selectedIssue = btn.getAttribute('data-issue');
             
-            // Hiển thị tips
-            var tipsBox = $('tips-box');
-            var tipsContent = $('tips-content');
-            tipsContent.innerHTML = '';
-            TIPS[selectedIssue].forEach(function(tip) {
-                var div = document.createElement('div');
-                div.className = 'tip-item ' + tip.type;
-                div.innerHTML = tip.text;
-                tipsContent.appendChild(div);
-            });
-            tipsBox.classList.add('show');
+            renderTips(selectedIssue, selectedOS);
 
-            // Kích hoạt nút tạo
+            if (selectedOS === 'ios') {
+                $('dns-card').style.display = 'block';
+            }
+
             var mainBtn = $('create-btn');
             mainBtn.disabled = false;
             mainBtn.textContent = 'XEM HƯỚNG DẪN & TẠO DNS';
@@ -191,7 +249,6 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
         };
     });
 
-    // Hàm tạo DNS Config
     function buildDNSConfig(issue) {
         var dnsConfig = {
             primary: '1.1.1.1',
@@ -200,12 +257,10 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
         };
 
         if (issue === 'lag' || issue === 'heavy') {
-            // Ưu tiên phản hồi nhanh
             dnsConfig.primary = '1.1.1.1';
             dnsConfig.secondary = '1.0.0.1';
             dnsConfig.url = 'https://1.1.1.1/dns-query';
         } else if (issue === 'shake' || issue === 'heat') {
-            // Ưu tiên ổn định
             dnsConfig.primary = '8.8.8.8';
             dnsConfig.secondary = '1.1.1.1';
             dnsConfig.url = 'https://8.8.8.8/dns-query';
@@ -241,9 +296,16 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
         '    <key>PayloadVersion</key>\n    <integer>1</integer>\n</dict>\n</plist>';
     }
 
-    // Tạo file
     $('create-btn').onclick = function() {
         if (!selectedIssue) return;
+
+        if (selectedOS === 'android') {
+            $('status').textContent = 'Hãy làm theo checklist ở trên. Android không cần file DNS.';
+            $('status').className = 'status';
+            $('download-row').style.display = 'none';
+            return;
+        }
+
         var wantDNS = $('opt-dns').checked;
 
         if (wantDNS) {
@@ -266,7 +328,6 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
         }
     };
 
-    // Cài / Lưu
     $('install-btn').onclick = function() {
         if (configFile) window.location.href = configFile.blobUrl;
     };
