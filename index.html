@@ -1,155 +1,260 @@
-import os
-import time
-import json
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Game Network Optimizer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 50%, #0a0a1a 100%);
+    color: #fff; min-height: 100vh; padding: 14px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.container { max-width: 640px; width: 100%; }
+h1 { text-align: center; font-size: 22px; margin-bottom: 6px; background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+.subtitle { text-align: center; font-size: 12px; color: #888; margin-bottom: 18px; line-height: 1.5; }
+.card { background: rgba(255,255,255,0.03); border: 1px solid rgba(168,85,247,0.3); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.label { font-size: 11px; font-weight: 800; color: #a855f7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.option-row { display: flex; flex-direction: column; gap: 8px; }
+.option-btn {
+    padding: 14px 16px; background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(168,85,247,0.3); border-radius: 10px;
+    color: #ccc; font-weight: 600; font-size: 13px; cursor: pointer;
+    text-align: left; transition: 0.2s; display: flex; align-items: center; gap: 10px;
+}
+.option-btn .check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #666; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.option-btn.active { background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.2)); border-color: #a855f7; color: #fff; }
+.option-btn.active .check { background: #a855f7; border-color: #a855f7; color: #fff; }
+.option-btn small { display: block; font-size: 10px; color: #888; margin-top: 2px; font-weight: 400; }
+button.main-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #a855f7, #ec4899); border: none; border-radius: 12px; color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 8px; letter-spacing: 1px; }
+button.main-btn:disabled { opacity: 0.5; }
+.download-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+button.install-btn, button.save-btn { padding: 16px 8px; border: none; border-radius: 12px; color: #fff; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+button.install-btn { background: linear-gradient(135deg, #22c55e, #16a34a); }
+button.save-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
+.status { font-size: 12px; text-align: center; padding: 12px; color: #22c55e; background: rgba(0,0,0,0.3); border-radius: 10px; margin-top: 12px; }
+.status.error { color: #ef4444; }
+.status.loading { color: #f59e0b; }
+.hint { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.4); border-radius: 10px; padding: 12px; font-size: 11px; color: #93c5fd; line-height: 1.6; margin-bottom: 12px; }
+.notice-box { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4); border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #fbbf24; line-height: 1.6; margin-top: 8px; }
+</style>
+</head>
+<body>
 
-# ================= CONFIG =================
-try:
-    from config import API_KEY, SECRET_KEY
-except:
-    API_KEY = "api"
-    SECRET_KEY = "secret"
-KEY_MO_TOOL = "mduyk" # Key bạn yêu cầu
+<div class="container">
+    <h1>GAME NETWORK OPTIMIZER</h1>
+    <div class="subtitle">Chọn vấn đề bạn gặp → Tạo cấu hình DNS tối ưu</div>
 
-# ================= ZLAPI =================
-try:
-    from zlapi import ZaloAPI, ThreadType, Message
-    from zlapi.models import Mention, MultiMention
-except ImportError:
-    print("\033[91m❌ Lỗi: Thiếu thư viện 'zlapi' trong thư mục!\033[0m")
-    exit()
+    <div class="hint">
+        <b>Lưu ý:</b> File cấu hình chỉ có thể tối ưu <b>DNS và kết nối mạng</b>. Nó <b>không thể</b> tăng FPS, làm mượt máy, hay can thiệp vào game. Nếu bạn cần giảm ping thực sự, hãy dùng ứng dụng định tuyến như LagX.
+    </div>
 
-class C:
-    G = "\033[92m" # Green
-    R = "\033[91m" # Red
-    Y = "\033[93m" # Yellow
-    B = "\033[94m" # Blue
-    E = "\033[0m"  # Reset
+    <!-- CHỌN VẤN ĐỀ -->
+    <div class="card">
+        <div class="label">VẤN ĐỀ BẠN GẶP</div>
+        <div class="option-row" id="issue-list">
+            <button class="option-btn" data-issue="ping">
+                <div class="check"></div>
+                <div>
+                    <b>Ping cao, giật lag</b>
+                    <small>Ưu tiên DNS phản hồi nhanh (Cloudflare)</small>
+                </div>
+            </button>
+            <button class="option-btn" data-issue="stable">
+                <div class="check"></div>
+                <div>
+                    <b>Mạng chập chờn, dễ mất kết nối</b>
+                    <small>Ưu tiên DNS ổn định, có dự phòng (Google + Cloudflare)</small>
+                </div>
+            </button>
+            <button class="option-btn" data-issue="secure">
+                <div class="check"></div>
+                <div>
+                    <b>Lo ngại bảo mật, bị chặn trang</b>
+                    <small>Ưu tiên DNS mã hóa DoH (Cloudflare 1.1.1.1)</small>
+                </div>
+            </button>
+            <button class="option-btn" data-issue="all">
+                <div class="check"></div>
+                <div>
+                    <b>Muốn tối ưu tổng hợp</b>
+                    <small>Kết hợp Cloudflare + Google, cân bằng mọi yếu tố</small>
+                </div>
+            </button>
+        </div>
+    </div>
 
-def clear():
-    os.system("cls" if os.name == "nt" else "clear")
+    <button class="main-btn" id="create-btn">TẠO CẤU HÌNH</button>
 
-# ================= CHỨNG THỰC KEY =================
-def check_key():
-    clear()
-    print(f"{C.B}========================================{C.E}")
-    print(f"{C.Y}          MDUYY        {C.E}")
-    print(f"{C.B}========================================{C.E}")
+    <div class="status" id="status">Chọn vấn đề ở trên</div>
 
-    print(f"{C.B}========================================{C.E}")
-    print(f"{C.Y}      NHẬP MK ĐI NGU  {C.E}")
-    print(f"{C.B}========================================{C.E}")
-    
-    input_key = input(f"{C.G}🔑 Nhập Key để mở Bố Mở Tool: {C.E}").strip()
-    
-    if input_key == KEY_MO_TOOL:
-        print(f"{C.G}✅ ĐĨ MẸ KEY ĐÚNG! CHỜ BỐ CHẠY TOOL...{C.E}")
-        time.sleep(1.5)
-        return True
-    else:
-        print(f"{C.R}❌ ĐĨ MẸ KEY SAI! MÀY XẠO LỒN À.{C.E}")
-        time.sleep(2)
-        return False
+    <div class="download-row" id="download-row" style="display:none;">
+        <button class="install-btn" id="install-btn">CÀI NGAY<small>Mở cài đặt</small></button>
+        <button class="save-btn" id="save-btn">LƯU TỆP<small>Tải .mobileconfig</small></button>
+    </div>
 
-# ================= BOT CLASS =================
-class ZaloTagBot(ZaloAPI):
-    def __init__(self, imei, cookies):
-        super().__init__(API_KEY, SECRET_KEY, imei, cookies)
-        self.running = False
+    <div class="notice-box">
+        <b>Sau khi cài:</b> File cấu hình sẽ đổi DNS hệ thống của bạn. Để gỡ, vào Cài đặt → Cài đặt chung → VPN & Quản lý thiết bị → chọn profile → Xóa.
+    </div>
+</div>
 
-    def fetch_groups(self):
-        try:
-            allg = self.fetchAllGroups()
-            groups = []
-            for gid in allg.gridVerMap:
-                try:
-                    name = self.fetchGroupInfo(gid).gridInfoMap[gid]["name"]
-                except: name = "Unknown"
-                groups.append({"id": gid, "name": name})
-            return groups
-        except: return []
+<script>
+(function() {
+    'use strict';
+    var $ = function(id) { return document.getElementById(id); };
+    var configFile = null;
+    var configBlobUrl = null;
+    var selectedIssue = null;
 
-    def fetch_members(self, gid):
-        users = []
-        info = self.fetchGroupInfo(gid)
-        mems = info.gridInfoMap[gid]["memVerList"]
-        for m in mems:
-            uid = m.split("_")[0]
-            try:
-                name = self.fetchUserInfo(uid).changed_profiles[uid]["displayName"]
-            except: name = uid
-            users.append({"id": uid, "name": name})
-        return users
+    // Chọn vấn đề
+    document.querySelectorAll('.option-btn').forEach(function(btn) {
+        btn.onclick = function() {
+            document.querySelectorAll('.option-btn').forEach(function(b) {
+                b.classList.remove('active');
+                b.querySelector('.check').textContent = '';
+            });
+            btn.classList.add('active');
+            btn.querySelector('.check').textContent = '✓';
+            selectedIssue = btn.getAttribute('data-issue');
+            $('status').textContent = 'Đã chọn: ' + btn.querySelector('b').textContent;
+            $('status').className = 'status';
+        };
+    });
 
-    def send_tags(self, gid, text, user_ids):
-        msg = text.rstrip() + " "
-        mentions = []
-        for uid in user_ids:
-            try:
-                name = self.fetchUserInfo(uid).changed_profiles[uid]["displayName"]
-            except: name = "User"
-            tag = f"@{name}"
-            offset = len(msg)
-            msg += tag + " "
-            mentions.append(Mention(uid=uid, length=len(tag), offset=offset, auto_format=False))
-        
-        self.send(Message(text=msg, mention=MultiMention(mentions)), gid, ThreadType.GROUP)
-        print(C.G + f"✅ Đã bật chế độ huỷ diệt: {text[:15]}..." + C.E)
+    // Tạo cấu hình DNS dựa trên lựa chọn
+    function buildDNSConfig(issue) {
+        var dnsConfig = {
+            primary: '',
+            secondary: '',
+            protocol: 'HTTPS',
+            url: ''
+        };
 
-# ================= RUN =================
-def run():
-    # Bước 1: Kiểm tra Key mở tool
-    if not check_key():
-        return
+        if (issue === 'ping') {
+            // Cloudflare - phản hồi nhanh nhất
+            dnsConfig.primary = '1.1.1.1';
+            dnsConfig.secondary = '1.0.0.1';
+            dnsConfig.url = 'https://1.1.1.1/dns-query';
+        } else if (issue === 'stable') {
+            // Google + Cloudflare dự phòng
+            dnsConfig.primary = '8.8.8.8';
+            dnsConfig.secondary = '1.1.1.1';
+            dnsConfig.url = 'https://8.8.8.8/dns-query';
+        } else if (issue === 'secure') {
+            // Cloudflare DoH mã hóa
+            dnsConfig.primary = '1.1.1.1';
+            dnsConfig.secondary = '1.0.0.1';
+            dnsConfig.url = 'https://1.1.1.1/dns-query';
+        } else {
+            // all - kết hợp
+            dnsConfig.primary = '1.1.1.1';
+            dnsConfig.secondary = '8.8.8.8';
+            dnsConfig.url = 'https://1.1.1.1/dns-query';
+        }
 
-    clear()
-    print(f"{C.Y}TOOL MDUY VIP PRO{C.E}")
-    imei = input("👉 Nhập IMEI CHO BỐ BIẾT: ").strip()
-    cookie_raw = input("👉 Nhập Cookie JSON ĐỨC TRỌNG: ").strip()
-    
-    try:
-        cookies = json.loads(cookie_raw)
-        bot = ZaloTagBot(imei, cookies)
-        
-        groups = bot.fetch_groups()
-        if not groups:
-            print(C.R + "❌ Không lấy được dữ liệu nhóm. Kiểm tra lại Cookie/IMEI." + C.E)
-            return
+        var uuid1 = 'A1B2C3D4-E5F6-7890-ABCD-' + Math.floor(Math.random()*1000000000000).toString(16).toUpperCase();
+        var uuid2 = 'B2C3D4E5-F6A7-8901-BCDE-' + Math.floor(Math.random()*1000000000000).toString(16).toUpperCase();
 
-        print("\n📋 DANH SÁCH NHÓM ĐỂ DUY XEM:")
-        for i, g in enumerate(groups, 1):
-            print(f"{i}. {g['name']}")
-        
-        gid = groups[int(input("\nChọn số đi đĩ: ")) - 1]["id"]
-        members = bot.fetch_members(gid)
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+        '<plist version="1.0">\n' +
+        '<dict>\n' +
+        '    <key>PayloadContent</key>\n' +
+        '    <array>\n' +
+        '        <dict>\n' +
+        '            <key>PayloadType</key>\n' +
+        '            <string>com.apple.dnsSettings.managed</string>\n' +
+        '            <key>PayloadIdentifier</key>\n' +
+        '            <string>com.mduy.dns.' + issue + '</string>\n' +
+        '            <key>PayloadUUID</key>\n' +
+        '            <string>' + uuid1 + '</string>\n' +
+        '            <key>PayloadVersion</key>\n' +
+        '            <integer>1</integer>\n' +
+        '            <key>PayloadDisplayName</key>\n' +
+        '            <string>DNS ' + issue + '</string>\n' +
+        '            <key>DNSSettings</key>\n' +
+        '            <dict>\n' +
+        '                <key>DNSProtocol</key>\n' +
+        '                <string>' + dnsConfig.protocol + '</string>\n' +
+        '                <key>ServerURL</key>\n' +
+        '                <string>' + dnsConfig.url + '</string>\n' +
+        '                <key>ServerAddresses</key>\n' +
+        '                <array>\n' +
+        '                    <string>' + dnsConfig.primary + '</string>\n' +
+        '                    <string>' + dnsConfig.secondary + '</string>\n' +
+        '                </array>\n' +
+        '            </dict>\n' +
+        '        </dict>\n' +
+        '    </array>\n' +
+        '    <key>PayloadDescription</key>\n' +
+        '    <string>Cấu hình DNS tối ưu cho vấn đề: ' + issue + '</string>\n' +
+        '    <key>PayloadDisplayName</key>\n' +
+        '    <string>MDUY DNS ' + issue + '</string>\n' +
+        '    <key>PayloadIdentifier</key>\n' +
+        '    <string>com.mduy.dns.profile.' + issue + '</string>\n' +
+        '    <key>PayloadOrganization</key>\n' +
+        '    <string>MDUY</string>\n' +
+        '    <key>PayloadRemovalDisallowed</key>\n' +
+        '    <false/>\n' +
+        '    <key>PayloadType</key>\n' +
+        '    <string>Configuration</string>\n' +
+        '    <key>PayloadUUID</key>\n' +
+        '    <string>' + uuid2 + '</string>\n' +
+        '    <key>PayloadVersion</key>\n' +
+        '    <integer>1</integer>\n' +
+        '</dict>\n' +
+        '</plist>';
+    }
 
-        print(f"\n CHỌN THÀNH VIÊN ĐỂ DUY HỦY DIỆT (vd: 3,6,7):")
-        for i, u in enumerate(members, 1):
-            print(f"{i}. {u['name']}")
-        
-        pick = input("Nhập số: ").strip()
-        user_ids = [members[int(i)-1]["id"] for i in pick.split(",") if i.strip().isdigit()]
+    // Tạo và tải file
+    $('create-btn').onclick = function() {
+        if (!selectedIssue) {
+            $('status').textContent = 'Vui lòng chọn vấn đề trước!';
+            $('status').className = 'status error';
+            return;
+        }
 
-        filename = input("📄 ĐỈ MẸ NHẬP FILE NGÔN VÀO (vd: spam.txt): ").strip()
-        delay = float(input("⏳ ĐỊT MẸ NHẬP DELAY VÀO (giây): ").strip())
+        $('status').textContent = 'Đang tạo...';
+        $('status').className = 'status loading';
 
-        if not os.path.exists(filename):
-            print(C.R + " ĐÉO CÓ FILE NÀO!" + C.E)
-            return
+        var config = buildDNSConfig(selectedIssue);
 
-        with open(filename, "r", encoding="utf-8") as f:
-            lines = [x.strip() for x in f if x.strip()]
+        if (configBlobUrl) URL.revokeObjectURL(configBlobUrl);
+        var blob = new Blob([config], { type: 'application/x-apple-aspen-config' });
+        configBlobUrl = URL.createObjectURL(blob);
 
-        bot.running = True
-        print(C.Y + "BO DUY CHUAN BI SPAM CHET ME NO... (Ctrl+C để dừng)" + C.E)
-        while bot.running:
-            for line in lines:
-                bot.send_tags(gid, line, user_ids)
-                time.sleep(delay)
-                
-    except KeyboardInterrupt:
-        print(C.R + "\n⛔ Đã dừng tool." + C.E)
-    except Exception as e:
-        print(C.R + f"❌ Lỗi: {e}" + C.E)
+        configFile = {
+            name: 'MDUY-DNS-' + selectedIssue + '.mobileconfig',
+            blobUrl: configBlobUrl
+        };
 
-if __name__ == "__main__":
-    run()
+        $('download-row').style.display = 'grid';
+        $('status').textContent = 'Tạo thành công! Cài để áp dụng.';
+        $('status').className = 'status';
+    };
+
+    $('install-btn').onclick = function() {
+        if (!configFile) return;
+        window.location.href = configFile.blobUrl;
+        $('status').textContent = 'Đang mở cài đặt...';
+        $('status').className = 'status loading';
+    };
+
+    $('save-btn').onclick = function() {
+        if (!configFile) return;
+        var a = document.createElement('a');
+        a.href = configFile.blobUrl;
+        a.download = configFile.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        $('status').textContent = 'Đã lưu ' + configFile.name;
+        $('status').className = 'status';
+    };
+})();
+</script>
+</body>
+</html>
