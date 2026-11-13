@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Game Network Optimizer</title>
+<title>Game Optimizer & DNS Builder</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
@@ -28,6 +28,14 @@ h1 { text-align: center; font-size: 22px; margin-bottom: 6px; background: linear
 .option-btn.active { background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.2)); border-color: #a855f7; color: #fff; }
 .option-btn.active .check { background: #a855f7; border-color: #a855f7; color: #fff; }
 .option-btn small { display: block; font-size: 10px; color: #888; margin-top: 2px; font-weight: 400; }
+
+.tips-box { display: none; margin-top: 12px; }
+.tips-box.show { display: block; }
+.tip-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 12px; line-height: 1.6; color: #ddd; border-left: 3px solid #a855f7; }
+.tip-item b { color: #a855f7; }
+.tip-item.safe { border-left-color: #22c55e; }
+.tip-item.warn { border-left-color: #f59e0b; }
+
 button.main-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #a855f7, #ec4899); border: none; border-radius: 12px; color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 8px; letter-spacing: 1px; }
 button.main-btn:disabled { opacity: 0.5; }
 .download-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
@@ -35,69 +43,83 @@ button.install-btn, button.save-btn { padding: 16px 8px; border: none; border-ra
 button.install-btn { background: linear-gradient(135deg, #22c55e, #16a34a); }
 button.save-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
 button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
+
 .status { font-size: 12px; text-align: center; padding: 12px; color: #22c55e; background: rgba(0,0,0,0.3); border-radius: 10px; margin-top: 12px; }
 .status.error { color: #ef4444; }
 .status.loading { color: #f59e0b; }
 .hint { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.4); border-radius: 10px; padding: 12px; font-size: 11px; color: #93c5fd; line-height: 1.6; margin-bottom: 12px; }
-.notice-box { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4); border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #fbbf24; line-height: 1.6; margin-top: 8px; }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>GAME NETWORK OPTIMIZER</h1>
-    <div class="subtitle">Chọn vấn đề bạn gặp → Tạo cấu hình DNS tối ưu</div>
+    <h1>GAME OPTIMIZER & DNS</h1>
+    <div class="subtitle">Chọn triệu chứng → Nhận checklist tối ưu + File DNS</div>
 
     <div class="hint">
-        <b>Lưu ý:</b> File cấu hình chỉ có thể tối ưu <b>DNS và kết nối mạng</b>. Nó <b>không thể</b> tăng FPS, làm mượt máy, hay can thiệp vào game. Nếu bạn cần giảm ping thực sự, hãy dùng ứng dụng định tuyến như LagX.
+        <b>Sự thật:</b> Không có file cấu hình nào sửa được rung tâm. Nhưng tối ưu máy, mạng và cài đặt trong game thì có tác dụng thật.
     </div>
 
     <!-- CHỌN VẤN ĐỀ -->
     <div class="card">
-        <div class="label">VẤN ĐỀ BẠN GẶP</div>
+        <div class="label">BẠN ĐANG GẶP VẤN ĐỀ GÌ?</div>
         <div class="option-row" id="issue-list">
-            <button class="option-btn" data-issue="ping">
+            <button class="option-btn" data-issue="heavy">
                 <div class="check"></div>
                 <div>
-                    <b>Ping cao, giật lag</b>
-                    <small>Ưu tiên DNS phản hồi nhanh (Cloudflare)</small>
+                    <b>Tâm bị "nặng" (kéo không nổi)</b>
+                    <small>Cảm giác aim bị ì, không theo tay</small>
                 </div>
             </button>
-            <button class="option-btn" data-issue="stable">
+            <button class="option-btn" data-issue="shake">
                 <div class="check"></div>
                 <div>
-                    <b>Mạng chập chờn, dễ mất kết nối</b>
-                    <small>Ưu tiên DNS ổn định, có dự phòng (Google + Cloudflare)</small>
+                    <b>Tâm bị "rung" (aim không ổn định)</b>
+                    <small>Tâm giật khi bắn, không bám đầu</small>
                 </div>
             </button>
-            <button class="option-btn" data-issue="secure">
+            <button class="option-btn" data-issue="lag">
                 <div class="check"></div>
                 <div>
-                    <b>Lo ngại bảo mật, bị chặn trang</b>
-                    <small>Ưu tiên DNS mã hóa DoH (Cloudflare 1.1.1.1)</small>
+                    <b>Mạng lag, ping cao, giật</b>
+                    <small>Delay khi bắn, nhân vật khựng</small>
                 </div>
             </button>
-            <button class="option-btn" data-issue="all">
+            <button class="option-btn" data-issue="heat">
                 <div class="check"></div>
                 <div>
-                    <b>Muốn tối ưu tổng hợp</b>
-                    <small>Kết hợp Cloudflare + Google, cân bằng mọi yếu tố</small>
+                    <b>Máy nóng, tụt FPS</b>
+                    <small>Chơi một lúc là giật, lag</small>
                 </div>
             </button>
         </div>
     </div>
 
-    <button class="main-btn" id="create-btn">TẠO CẤU HÌNH</button>
-
-    <div class="status" id="status">Chọn vấn đề ở trên</div>
-
-    <div class="download-row" id="download-row" style="display:none;">
-        <button class="install-btn" id="install-btn">CÀI NGAY<small>Mở cài đặt</small></button>
-        <button class="save-btn" id="save-btn">LƯU TỆP<small>Tải .mobileconfig</small></button>
+    <!-- CHECKLIST TỐI ƯU -->
+    <div class="card tips-box" id="tips-box">
+        <div class="label">CHECKLIST TỐI ƯU (Thực sự có tác dụng)</div>
+        <div id="tips-content"></div>
     </div>
 
-    <div class="notice-box">
-        <b>Sau khi cài:</b> File cấu hình sẽ đổi DNS hệ thống của bạn. Để gỡ, vào Cài đặt → Cài đặt chung → VPN & Quản lý thiết bị → chọn profile → Xóa.
+    <!-- TẠO DNS -->
+    <div class="card">
+        <div class="label">FILE CẤU HÌNH DNS (Tùy chọn)</div>
+        <p style="font-size: 11px; color: #888; margin-bottom: 8px; line-height: 1.5;">
+            File này chỉ đổi DNS hệ thống. Nó <b>không sửa rung tâm</b>, nhưng có thể giúp phân giải tên miền nhanh hơn, đôi khi cải thiện độ ổn định mạng.
+        </p>
+        <label class="switch-row" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; cursor: pointer;">
+            <span style="font-size: 12px; font-weight: 600;">Tạo kèm file DNS tối ưu</span>
+            <input type="checkbox" id="opt-dns" style="transform: scale(1.5); margin-right: 5px;">
+        </label>
+    </div>
+
+    <button class="main-btn" id="create-btn" disabled>CHỌN VẤN ĐỀ ĐỂ BẮT ĐẦU</button>
+
+    <div class="status" id="status">Sẵn sàng</div>
+
+    <div class="download-row" id="download-row" style="display:none;">
+        <button class="install-btn" id="install-btn">CÀI DNS<small>Mở cài đặt</small></button>
+        <button class="save-btn" id="save-btn">LƯU TỆP<small>Tải .mobileconfig</small></button>
     </div>
 </div>
 
@@ -109,6 +131,34 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
     var configBlobUrl = null;
     var selectedIssue = null;
 
+    // Dữ liệu Checklist
+    var TIPS = {
+        heavy: [
+            { type: 'safe', text: '<b>Máy (iOS):</b> Bật "Giảm chuyển động" và "Giảm độ trong suốt" trong Cài đặt > Trợ năng. Tắt "Làm mới ứng dụng nền". Khởi động lại máy trước khi chơi.' },
+            { type: 'safe', text: '<b>Trong game:</b> Tăng nhẹ độ nhạy General và Red Dot lên 5-10 điểm (ví dụ General 185, Red Dot 195). Test lại trong Đảo Huấn Luyện.' },
+            { type: 'safe', text: '<b>Mạng:</b> Dùng app định tuyến như LagX để giảm lag spikes (nguyên nhân khiến aim bị "khựng").' },
+            { type: 'warn', text: '<b>Lưu ý:</b> Tâm "nặng" thường do độ nhạy quá thấp hoặc máy xử lý chậm. Không có file cấu hình nào sửa được điều này.' }
+        ],
+        shake: [
+            { type: 'safe', text: '<b>Máy (iOS):</b> Đảm bảo máy không nóng (tháo ốp, không vừa sạc vừa chơi). Hạ đồ họa game xuống Smooth/Standard để giảm tải GPU.' },
+            { type: 'safe', text: '<b>Trong game:</b> Nếu tâm văng quá đầu, giảm nhẹ Red Dot và 4x Scope xuống 3-5 điểm. Giữ ngón tay khô hoặc dùng găng tay gaming.' },
+            { type: 'safe', text: '<b>Mạng:</b> Lag spikes và packet loss tạo cảm giác "rung" dù máy khỏe. Dùng LagX để ổn định kết nối.' },
+            { type: 'warn', text: '<b>Lưu ý:</b> Tâm rung do nhiều yếu tố (máy nóng, mạng lag, tay ướt, độ nhạy sai). Không có file cấu hình nào sửa được rung tâm.' }
+        ],
+        lag: [
+            { type: 'safe', text: '<b>Mạng:</b> Dùng ứng dụng định tuyến game traffic như LagX. Nó chuyển hướng riêng lưu lượng game qua server tối ưu, giảm ping hiệu quả.' },
+            { type: 'safe', text: '<b>Wi-Fi:</b> Chuyển sang mạng 5GHz nếu có. Tránh xa router. Tắt các thiết bị khác đang tải nặng.' },
+            { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa, tắt hiệu ứng. Đảm bảo máy không nóng khi chơi.' },
+            { type: 'warn', text: '<b>Lưu ý:</b> Ping phụ thuộc vào tuyến đường đến server game, không phải DNS. File cấu hình DNS chỉ giúp phân giải tên miền nhanh hơn, không giảm ping trực tiếp.' }
+        ],
+        heat: [
+            { type: 'safe', text: '<b>Máy (iOS):</b> Tháo ốp lưng. Không vừa sạc vừa chơi. Tắt "Làm mới ứng dụng nền". Khởi động lại máy trước khi chơi.' },
+            { type: 'safe', text: '<b>Trong game:</b> Hạ đồ họa xuống Smooth/Standard. Tắt các hiệu ứng như bóng đổ, phản chiếu. Bật High FPS nếu máy hỗ trợ.' },
+            { type: 'safe', text: '<b>Môi trường:</b> Chơi ở nơi thoáng mát. Không để máy dưới ánh nắng trực tiếp. Dùng quạt tản nhiệt nếu cần.' },
+            { type: 'warn', text: '<b>Lưu ý:</b> Máy nóng là do phần cứng và tải game. Không có file cấu hình nào làm mát máy.' }
+        ]
+    };
+
     // Chọn vấn đề
     document.querySelectorAll('.option-btn').forEach(function(btn) {
         btn.onclick = function() {
@@ -119,40 +169,46 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
             btn.classList.add('active');
             btn.querySelector('.check').textContent = '✓';
             selectedIssue = btn.getAttribute('data-issue');
+            
+            // Hiển thị tips
+            var tipsBox = $('tips-box');
+            var tipsContent = $('tips-content');
+            tipsContent.innerHTML = '';
+            TIPS[selectedIssue].forEach(function(tip) {
+                var div = document.createElement('div');
+                div.className = 'tip-item ' + tip.type;
+                div.innerHTML = tip.text;
+                tipsContent.appendChild(div);
+            });
+            tipsBox.classList.add('show');
+
+            // Kích hoạt nút tạo
+            var mainBtn = $('create-btn');
+            mainBtn.disabled = false;
+            mainBtn.textContent = 'XEM HƯỚNG DẪN & TẠO DNS';
             $('status').textContent = 'Đã chọn: ' + btn.querySelector('b').textContent;
             $('status').className = 'status';
         };
     });
 
-    // Tạo cấu hình DNS dựa trên lựa chọn
+    // Hàm tạo DNS Config
     function buildDNSConfig(issue) {
         var dnsConfig = {
-            primary: '',
-            secondary: '',
-            protocol: 'HTTPS',
-            url: ''
+            primary: '1.1.1.1',
+            secondary: '1.0.0.1',
+            url: 'https://1.1.1.1/dns-query'
         };
 
-        if (issue === 'ping') {
-            // Cloudflare - phản hồi nhanh nhất
+        if (issue === 'lag' || issue === 'heavy') {
+            // Ưu tiên phản hồi nhanh
             dnsConfig.primary = '1.1.1.1';
             dnsConfig.secondary = '1.0.0.1';
             dnsConfig.url = 'https://1.1.1.1/dns-query';
-        } else if (issue === 'stable') {
-            // Google + Cloudflare dự phòng
+        } else if (issue === 'shake' || issue === 'heat') {
+            // Ưu tiên ổn định
             dnsConfig.primary = '8.8.8.8';
             dnsConfig.secondary = '1.1.1.1';
             dnsConfig.url = 'https://8.8.8.8/dns-query';
-        } else if (issue === 'secure') {
-            // Cloudflare DoH mã hóa
-            dnsConfig.primary = '1.1.1.1';
-            dnsConfig.secondary = '1.0.0.1';
-            dnsConfig.url = 'https://1.1.1.1/dns-query';
-        } else {
-            // all - kết hợp
-            dnsConfig.primary = '1.1.1.1';
-            dnsConfig.secondary = '8.8.8.8';
-            dnsConfig.url = 'https://1.1.1.1/dns-query';
         }
 
         var uuid1 = 'A1B2C3D4-E5F6-7890-ABCD-' + Math.floor(Math.random()*1000000000000).toString(16).toUpperCase();
@@ -160,99 +216,67 @@ button small { font-size: 9px; opacity: 0.8; font-weight: 600; }
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' +
         '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
-        '<plist version="1.0">\n' +
-        '<dict>\n' +
-        '    <key>PayloadContent</key>\n' +
-        '    <array>\n' +
-        '        <dict>\n' +
-        '            <key>PayloadType</key>\n' +
-        '            <string>com.apple.dnsSettings.managed</string>\n' +
-        '            <key>PayloadIdentifier</key>\n' +
-        '            <string>com.mduy.dns.' + issue + '</string>\n' +
-        '            <key>PayloadUUID</key>\n' +
-        '            <string>' + uuid1 + '</string>\n' +
-        '            <key>PayloadVersion</key>\n' +
-        '            <integer>1</integer>\n' +
-        '            <key>PayloadDisplayName</key>\n' +
-        '            <string>DNS ' + issue + '</string>\n' +
-        '            <key>DNSSettings</key>\n' +
-        '            <dict>\n' +
-        '                <key>DNSProtocol</key>\n' +
-        '                <string>' + dnsConfig.protocol + '</string>\n' +
-        '                <key>ServerURL</key>\n' +
-        '                <string>' + dnsConfig.url + '</string>\n' +
-        '                <key>ServerAddresses</key>\n' +
-        '                <array>\n' +
+        '<plist version="1.0">\n<dict>\n' +
+        '    <key>PayloadContent</key>\n    <array>\n        <dict>\n' +
+        '            <key>PayloadType</key>\n            <string>com.apple.dnsSettings.managed</string>\n' +
+        '            <key>PayloadIdentifier</key>\n            <string>com.mduy.dns.' + issue + '</string>\n' +
+        '            <key>PayloadUUID</key>\n            <string>' + uuid1 + '</string>\n' +
+        '            <key>PayloadVersion</key>\n            <integer>1</integer>\n' +
+        '            <key>PayloadDisplayName</key>\n            <string>DNS ' + issue + '</string>\n' +
+        '            <key>DNSSettings</key>\n            <dict>\n' +
+        '                <key>DNSProtocol</key>\n                <string>HTTPS</string>\n' +
+        '                <key>ServerURL</key>\n                <string>' + dnsConfig.url + '</string>\n' +
+        '                <key>ServerAddresses</key>\n                <array>\n' +
         '                    <string>' + dnsConfig.primary + '</string>\n' +
         '                    <string>' + dnsConfig.secondary + '</string>\n' +
         '                </array>\n' +
-        '            </dict>\n' +
-        '        </dict>\n' +
-        '    </array>\n' +
-        '    <key>PayloadDescription</key>\n' +
-        '    <string>Cấu hình DNS tối ưu cho vấn đề: ' + issue + '</string>\n' +
-        '    <key>PayloadDisplayName</key>\n' +
-        '    <string>MDUY DNS ' + issue + '</string>\n' +
-        '    <key>PayloadIdentifier</key>\n' +
-        '    <string>com.mduy.dns.profile.' + issue + '</string>\n' +
-        '    <key>PayloadOrganization</key>\n' +
-        '    <string>MDUY</string>\n' +
-        '    <key>PayloadRemovalDisallowed</key>\n' +
-        '    <false/>\n' +
-        '    <key>PayloadType</key>\n' +
-        '    <string>Configuration</string>\n' +
-        '    <key>PayloadUUID</key>\n' +
-        '    <string>' + uuid2 + '</string>\n' +
-        '    <key>PayloadVersion</key>\n' +
-        '    <integer>1</integer>\n' +
-        '</dict>\n' +
-        '</plist>';
+        '            </dict>\n        </dict>\n    </array>\n' +
+        '    <key>PayloadDescription</key>\n    <string>DNS tối ưu cho: ' + issue + '</string>\n' +
+        '    <key>PayloadDisplayName</key>\n    <string>MDUY DNS</string>\n' +
+        '    <key>PayloadIdentifier</key>\n    <string>com.mduy.dns.profile</string>\n' +
+        '    <key>PayloadOrganization</key>\n    <string>MDUY</string>\n' +
+        '    <key>PayloadRemovalDisallowed</key>\n    <false/>\n' +
+        '    <key>PayloadType</key>\n    <string>Configuration</string>\n' +
+        '    <key>PayloadUUID</key>\n    <string>' + uuid2 + '</string>\n' +
+        '    <key>PayloadVersion</key>\n    <integer>1</integer>\n</dict>\n</plist>';
     }
 
-    // Tạo và tải file
+    // Tạo file
     $('create-btn').onclick = function() {
-        if (!selectedIssue) {
-            $('status').textContent = 'Vui lòng chọn vấn đề trước!';
-            $('status').className = 'status error';
-            return;
+        if (!selectedIssue) return;
+        var wantDNS = $('opt-dns').checked;
+
+        if (wantDNS) {
+            $('status').textContent = 'Đang tạo file DNS...';
+            $('status').className = 'status loading';
+
+            var config = buildDNSConfig(selectedIssue);
+            if (configBlobUrl) URL.revokeObjectURL(configBlobUrl);
+            var blob = new Blob([config], { type: 'application/x-apple-aspen-config' });
+            configBlobUrl = URL.createObjectURL(blob);
+            configFile = { name: 'MDUY-DNS.mobileconfig', blobUrl: configBlobUrl };
+
+            $('download-row').style.display = 'grid';
+            $('status').textContent = 'Đã tạo file DNS. Bạn có thể cài ngay hoặc lưu lại.';
+            $('status').className = 'status';
+        } else {
+            $('status').textContent = 'Hãy làm theo checklist ở trên để tối ưu. Không tạo file DNS.';
+            $('status').className = 'status';
+            $('download-row').style.display = 'none';
         }
-
-        $('status').textContent = 'Đang tạo...';
-        $('status').className = 'status loading';
-
-        var config = buildDNSConfig(selectedIssue);
-
-        if (configBlobUrl) URL.revokeObjectURL(configBlobUrl);
-        var blob = new Blob([config], { type: 'application/x-apple-aspen-config' });
-        configBlobUrl = URL.createObjectURL(blob);
-
-        configFile = {
-            name: 'MDUY-DNS-' + selectedIssue + '.mobileconfig',
-            blobUrl: configBlobUrl
-        };
-
-        $('download-row').style.display = 'grid';
-        $('status').textContent = 'Tạo thành công! Cài để áp dụng.';
-        $('status').className = 'status';
     };
 
+    // Cài / Lưu
     $('install-btn').onclick = function() {
-        if (!configFile) return;
-        window.location.href = configFile.blobUrl;
-        $('status').textContent = 'Đang mở cài đặt...';
-        $('status').className = 'status loading';
+        if (configFile) window.location.href = configFile.blobUrl;
     };
-
     $('save-btn').onclick = function() {
-        if (!configFile) return;
-        var a = document.createElement('a');
-        a.href = configFile.blobUrl;
-        a.download = configFile.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        $('status').textContent = 'Đã lưu ' + configFile.name;
-        $('status').className = 'status';
+        if (configFile) {
+            var a = document.createElement('a');
+            a.href = configFile.blobUrl;
+            a.download = configFile.name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
     };
 })();
 </script>
